@@ -876,10 +876,12 @@ function loadData(){
   try{completionLog=JSON.parse(localStorage.getItem("hm_log")||"[]");}catch(e){}
   try{taskOverrides=JSON.parse(localStorage.getItem("hm_overrides")||"{}");}catch(e){}
   try{companyData=Object.assign({nom:"",logo:null,address:"",phone:"",email:"",web:"",directorName:"",directorTitle:"Directeur",directorPhone:"",directorEmail:"",orgName:"",orgRef:"",orgAddress:"",orgContact:"",orgPerson:""},JSON.parse(localStorage.getItem("hm_company")||"{}"));}catch(e){}
-  try{usersData=JSON.parse(localStorage.getItem("hm_users")||"[]");}catch(e){}
-  if(usersData.length===0){
-    usersData=[{id:'u_admin',name:'Directeur',username:'admin',passwordHash:hashStr('1234'),systemRole:'directeur',ownRoleId:null,evaluableRoleIds:ROLES.map(r=>r.id),active:true,createdAt:new Date().toISOString()}];
-    saveUsers();
+  try{usersData=JSON.parse(localStorage.getItem("hm_users")||"[]");}catch(e){usersData=[];}
+  // Toujours garantir le compte admin même si localStorage est bloqué
+  if(!usersData.find(u=>u.username==='admin')){
+    const adminDef={id:'u_admin',name:'Directeur',username:'admin',passwordHash:hashStr('1234'),systemRole:'directeur',ownRoleId:null,evaluableRoleIds:ROLES.map(r=>r.id),active:true,createdAt:new Date().toISOString()};
+    if(usersData.length===0){usersData=[adminDef];}else{usersData.unshift(adminDef);}
+    try{saveUsers();}catch(e){}
   }
 }
 function saveData(){
