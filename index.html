@@ -1796,12 +1796,12 @@ function loadFirebaseConfig(){
 function saveFirebaseConfig(){
   const cfg={
     apiKey:document.getElementById('fb-apiKey').value.trim(),
-    databaseURL:document.getElementById('fb-databaseURL').value.trim(),
+    databaseURL:document.getElementById('fb-databaseURL').value.trim()||'https://pilotage-2115e-default-rtdb.europe-west1.firebasedatabase.app',
     projectId:document.getElementById('fb-projectId').value.trim(),
     appId:document.getElementById('fb-appId').value.trim(),
     authDomain:(document.getElementById('fb-projectId').value.trim())+'.firebaseapp.com',
-    storageBucket:(document.getElementById('fb-projectId').value.trim())+'.appspot.com',
-    messagingSenderId:'000000000000'
+    storageBucket:'pilotage-2115e.firebasestorage.app',
+    messagingSenderId:'952400171478'
   };
   if(!cfg.apiKey||!cfg.databaseURL||!cfg.projectId){showToast('Remplissez API Key, Database URL et Project ID','#e74c3c');return;}
   localStorage.setItem('hm_fb_config',JSON.stringify(cfg));
@@ -1827,7 +1827,7 @@ function renderFirebaseConfigForm(){
   if(!cfg)return;
   const f=id=>document.getElementById(id);
   if(f('fb-apiKey'))f('fb-apiKey').value=cfg.apiKey||'';
-  if(f('fb-databaseURL'))f('fb-databaseURL').value=cfg.databaseURL||'';
+  if(f('fb-databaseURL'))f('fb-databaseURL').value=cfg.databaseURL||'https://pilotage-2115e-default-rtdb.europe-west1.firebasedatabase.app';
   if(f('fb-projectId'))f('fb-projectId').value=cfg.projectId||'';
   if(f('fb-appId'))f('fb-appId').value=cfg.appId||'';
 }
