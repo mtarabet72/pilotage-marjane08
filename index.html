@@ -393,7 +393,7 @@ input,select,textarea{font-family:'DM Sans',sans-serif;font-size:14px;}
       </div>
     </div>
     <button class="login-btn" onclick="doLogin()">🔐 Connexion</button>
-    <div class="login-error" id="login-error">Identifiant ou mot de passe incorrect</div>
+    <div class="login-error" id="login-error"></div>
     <div class="login-hint" id="login-hint">Connexion initiale : admin / 1234</div>
   </div>
 </div>
@@ -2021,7 +2021,7 @@ function resetPeriodicData(){
 }
 function setVH(){document.documentElement.style.setProperty('--vh',(window.innerHeight*0.01)+'px');}
 window.addEventListener('resize',setVH);setVH();
-document.addEventListener('touchend',e=>{if(e.target.tagName==='BUTTON'||e.target.closest('button'))e.preventDefault();},{passive:false});
+document.addEventListener('touchend',e=>{if((e.target.tagName==='BUTTON'||e.target.closest('button'))&&!e.target.closest('#login-overlay'))e.preventDefault();},{passive:false});
 window.addEventListener('beforeunload',()=>{saveData();saveCompanyData();});
 
 loadData();
