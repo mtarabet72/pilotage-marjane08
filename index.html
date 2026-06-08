@@ -7,11 +7,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Pilotage Hypermarché — Direction</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- PWA Manifest -->
-<link rel="manifest" href="./manifest.json">
-<!-- Firebase SDK v9 compat -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 :root{
   --bg:#eef0f5;--white:#fff;--border:#e2e6ed;--text:#1a1f2e;--muted:#8892a4;
@@ -369,6 +364,13 @@ input,select,textarea{font-family:'DM Sans',sans-serif;font-size:14px;}
 /* ══════════════════════════ PRINT ══════════════════════════ */
 @media print{body *{visibility:hidden!important;}#print-area,#print-area *{visibility:visible!important;}#print-area{position:fixed;top:0;left:0;width:100%;}}
 </style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a1628">
+<link rel="apple-touch-icon" href="./icons/icon-192-marjane.png">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 </head>
 <body>
 
@@ -393,7 +395,7 @@ input,select,textarea{font-family:'DM Sans',sans-serif;font-size:14px;}
       </div>
     </div>
     <button class="login-btn" onclick="doLogin()">🔐 Connexion</button>
-    <div class="login-error" id="login-error"></div>
+    <div class="login-error" id="login-error">Identifiant ou mot de passe incorrect</div>
     <div class="login-hint" id="login-hint">Connexion initiale : admin / 1234</div>
   </div>
 </div>
@@ -588,28 +590,6 @@ input,select,textarea{font-family:'DM Sans',sans-serif;font-size:14px;}
 
 <!-- ══════════════ PARAMÈTRES ══════════════ -->
 <div id="view-settings" class="view">
-
-  <!-- Firebase Config (nouveau) -->
-  <div class="settings-card" id="firebase-config-card" style="border-left:4px solid #f39c12;">
-    <h3>🔥 Configuration Firebase (Suivi Live)</h3>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">
-      Connectez votre projet Firebase pour activer la synchronisation en temps réel entre appareils.<br>
-      <a href="https://console.firebase.google.com" target="_blank" style="color:#2980b9;font-size:11px;">→ console.firebase.google.com</a>
-    </div>
-    <div id="firebase-status-bar" style="display:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;margin-bottom:12px;"></div>
-    <div class="settings-grid">
-      <div class="sf-group full-width"><label class="sf-label">API Key</label><input type="text" class="sf-input" id="fb-apiKey" placeholder="AIzaSy..."></div>
-      <div class="sf-group full-width"><label class="sf-label">Database URL</label><input type="text" class="sf-input" id="fb-databaseURL" placeholder="https://mon-projet-default-rtdb.firebaseio.com"></div>
-      <div class="sf-group"><label class="sf-label">Project ID</label><input type="text" class="sf-input" id="fb-projectId" placeholder="mon-projet"></div>
-      <div class="sf-group"><label class="sf-label">App ID</label><input type="text" class="sf-input" id="fb-appId" placeholder="1:123456:web:abc123"></div>
-    </div>
-    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <button class="btn-primary" onclick="saveFirebaseConfig()" style="background:#f39c12;border-color:#f39c12;">🔥 Connecter Firebase</button>
-      <button class="btn-secondary" onclick="testFirebaseConnection()">📡 Tester la connexion</button>
-      <button class="btn-secondary" onclick="clearFirebaseConfig()" style="color:#e74c3c;">✕ Déconnecter</button>
-    </div>
-    <div style="margin-top:10px;font-size:10px;color:#bbb;">⚠️ Ces informations sont stockées localement sur cet appareil uniquement. Chaque appareil doit être configuré.</div>
-  </div>
 
   <!-- Identité Société -->
   <div class="settings-card">
@@ -876,12 +856,10 @@ function loadData(){
   try{completionLog=JSON.parse(localStorage.getItem("hm_log")||"[]");}catch(e){}
   try{taskOverrides=JSON.parse(localStorage.getItem("hm_overrides")||"{}");}catch(e){}
   try{companyData=Object.assign({nom:"",logo:null,address:"",phone:"",email:"",web:"",directorName:"",directorTitle:"Directeur",directorPhone:"",directorEmail:"",orgName:"",orgRef:"",orgAddress:"",orgContact:"",orgPerson:""},JSON.parse(localStorage.getItem("hm_company")||"{}"));}catch(e){}
-  try{usersData=JSON.parse(localStorage.getItem("hm_users")||"[]");}catch(e){usersData=[];}
-  // Toujours garantir le compte admin même si localStorage est bloqué
-  if(!usersData.find(u=>u.username==='admin')){
-    const adminDef={id:'u_admin',name:'Directeur',username:'admin',passwordHash:hashStr('1234'),systemRole:'directeur',ownRoleId:null,evaluableRoleIds:ROLES.map(r=>r.id),active:true,createdAt:new Date().toISOString()};
-    if(usersData.length===0){usersData=[adminDef];}else{usersData.unshift(adminDef);}
-    try{saveUsers();}catch(e){}
+  try{usersData=JSON.parse(localStorage.getItem("hm_users")||"[]");}catch(e){}
+  if(usersData.length===0){
+    usersData=[{id:'u_admin',name:'Directeur',username:'admin',passwordHash:hashStr('1234'),systemRole:'directeur',ownRoleId:null,evaluableRoleIds:ROLES.map(r=>r.id),active:true,createdAt:new Date().toISOString()}];
+    saveUsers();
   }
 }
 function saveData(){
@@ -1012,7 +990,7 @@ function showView(v){
   if(v==="tasks"){if(viewMode==='rayon'&&rayonActif){renderSidebar();afficherRayon(rayonActif);}else{renderSidebar();renderTaskView();}}
   if(v==="results")renderResults();
   if(v==="export")renderExportScope();
-  if(v==="settings"){renderSettingsForm();renderTaskMgmtRoleSelect();renderUsersList();renderFirebaseConfigForm();}
+  if(v==="settings"){renderSettingsForm();renderTaskMgmtRoleSelect();renderUsersList();}
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1633,7 +1611,14 @@ function buildReportHTML(forPrint=false){
   const cd=companyData,gPct=totalTasks?Math.round(totalDone/totalTasks*100):0;
   const logoHtml=cd.logo?`<img src="${cd.logo}" style="height:50px;border-radius:6px;" alt="Logo">`:`<span style="font-size:28px;">🏬</span>`;
   const dirBlock=cd.directorName?`<div><span style="font-size:10px;opacity:.6;">Directeur</span><br><span style="font-size:13px;font-weight:700;">${cd.directorName}${cd.directorTitle?' — '+cd.directorTitle:''}</span></div>`:'';
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Rapport — ${periodLabel}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#1a1f2e;padding:${forPrint?"0":"20px"};}@page{margin:15mm 12mm;size:A4;}@media print{body{padding:0;}}</style></head><body>
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Rapport — ${periodLabel}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#1a1f2e;padding:${forPrint?"0":"20px"};}@page{margin:15mm 12mm;size:A4;}@media print{body{padding:0;}}</style>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a1628">
+<link rel="apple-touch-icon" href="./icons/icon-192-marjane.png">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+</head><body>
   <div style="background:linear-gradient(135deg,#0a1628,#0d3060);color:#fff;padding:18px 22px;border-radius:${forPrint?"0":"8px 8px 0 0"};">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">${logoHtml}<div><div style="font-size:16px;font-weight:900;">${cd.nom||'RAPPORT DE SUIVI DES TÂCHES'}</div>${cd.address?`<div style="font-size:11px;opacity:.7;">${cd.address}</div>`:''}</div></div>
     <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:8px;">
@@ -1649,7 +1634,63 @@ function buildReportHTML(forPrint=false){
   </div>
   <div style="padding:0 2px;">${body||`<div style="text-align:center;padding:40px;color:#aaa;">Aucune donnée.</div>`}</div>
   <div style="margin-top:30px;padding:12px 0;border-top:1px solid #e2e6ed;text-align:center;font-size:10px;color:#bbb;">${cd.nom||'Outil de pilotage'} · ${now}</div>
-  </body></html>`;
+  
+<script>
+// === FIREBASE CONFIG - REMPLACE PAR TES VALEURS ===
+const firebaseConfig = {
+  apiKey: "AIzaSyDNdudAyJjS22vRsGMxMVS6P8RtvG8vWLE",
+  authDomain: "pilotage-2115e.firebaseapp.com",
+  databaseURL: "https://pilotage-2115e-default-rtdb.firebaseio.com",
+  projectId: "pilotage-2115e",
+  storageBucket: "pilotage-2115e.firebasestorage.app",
+  messagingSenderId: "952400171478",
+  appId: "1:952400171478:web:53e2942c6c6dc63fb99477"
+};
+// ================================================
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const stateRef = db.ref('hm/state');
+
+// Sync layer
+async function pushState(){
+  const payload = {
+    completions,
+    kpis: typeof kpis !== 'undefined' ? kpis : {},
+    incidents: typeof incidents !== 'undefined' ? incidents : [],
+    notes: typeof notes !== 'undefined' ? notes : {},
+    updatedAt: new Date().toISOString(),
+    byUser: currentUser?.name || '?'
+  };
+  await stateRef.set(payload);
+}
+
+// Override broadcastUpdate
+const _origBroadcast = broadcastUpdate;
+broadcastUpdate = function(){
+  _origBroadcast();
+  pushState();
+};
+
+// Listen realtime
+stateRef.on('value', snap=>{
+  const payload = snap.val();
+  if(!payload) return;
+  if(payload.completions) Object.assign(completions, payload.completions);
+  if(payload.kpis) Object.assign(kpis, payload.kpis);
+  if(payload.incidents) incidents = payload.incidents;
+  if(payload.notes) Object.assign(notes, payload.notes);
+  saveData();
+  renderAll();
+  if(_livePanel) renderLivePanel(buildLiveSnapshot(), payload.updatedAt, payload.byUser);
+});
+
+// Service Worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('./service-worker.js'));
+}
+</script>
+
+</body></html>`;
 }
 function showPreview(){
   const html=buildReportHTML(false);
@@ -1797,100 +1838,17 @@ function confirmReset(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// FIREBASE — INIT & CONFIG
+// LIVE ADMIN — SUIVI EN TEMPS RÉEL
 // ══════════════════════════════════════════════════════════════
-let _fbApp=null,_fbDb=null,_fbConnected=false,_fbLiveRef=null,_fbUnsubscribe=null;
-
-function loadFirebaseConfig(){
-  try{return JSON.parse(localStorage.getItem('hm_fb_config')||'null');}catch(e){return null;}
-}
-function saveFirebaseConfig(){
-  const cfg={
-    apiKey:document.getElementById('fb-apiKey').value.trim(),
-    databaseURL:document.getElementById('fb-databaseURL').value.trim(),
-    projectId:document.getElementById('fb-projectId').value.trim(),
-    appId:document.getElementById('fb-appId').value.trim(),
-    authDomain:(document.getElementById('fb-projectId').value.trim())+'.firebaseapp.com',
-    storageBucket:(document.getElementById('fb-projectId').value.trim())+'.appspot.com',
-    messagingSenderId:'000000000000'
-  };
-  if(!cfg.apiKey||!cfg.databaseURL||!cfg.projectId){showToast('Remplissez API Key, Database URL et Project ID','#e74c3c');return;}
-  localStorage.setItem('hm_fb_config',JSON.stringify(cfg));
-  initFirebase(cfg);
-}
-function clearFirebaseConfig(){
-  localStorage.removeItem('hm_fb_config');
-  _fbConnected=false;_fbDb=null;_fbApp=null;
-  showFirebaseStatus('⚠️ Firebase déconnecté','#f39c12');
-  showToast('Firebase déconnecté','#888');
-}
-function showFirebaseStatus(msg,color){
-  const bar=document.getElementById('firebase-status-bar');
-  if(!bar)return;
-  bar.style.display='block';
-  bar.style.background=color+'22';
-  bar.style.color=color;
-  bar.style.border='1px solid '+color+'44';
-  bar.textContent=msg;
-}
-function renderFirebaseConfigForm(){
-  const cfg=loadFirebaseConfig();
-  if(!cfg)return;
-  const f=id=>document.getElementById(id);
-  if(f('fb-apiKey'))f('fb-apiKey').value=cfg.apiKey||'';
-  if(f('fb-databaseURL'))f('fb-databaseURL').value=cfg.databaseURL||'';
-  if(f('fb-projectId'))f('fb-projectId').value=cfg.projectId||'';
-  if(f('fb-appId'))f('fb-appId').value=cfg.appId||'';
-}
-function initFirebase(cfg){
-  try{
-    // Supprimer l'app existante si besoin
-    if(_fbApp){try{firebase.app('hm').delete();}catch(e){}}
-    _fbApp=firebase.initializeApp(cfg,'hm');
-    _fbDb=firebase.database(_fbApp);
-    _fbConnected=false;
-    // Test de connectivité
-    _fbDb.ref('.info/connected').on('value',snap=>{
-      _fbConnected=!!snap.val();
-      const statusBar=document.getElementById('firebase-status-bar');
-      if(_fbConnected){
-        showFirebaseStatus('✅ Firebase connecté — Suivi live actif','#27ae60');
-        showToast('🔥 Firebase connecté !','#27ae60');
-      } else {
-        if(statusBar)showFirebaseStatus('⏳ Connexion Firebase en cours...','#f39c12');
-      }
-    });
-  }catch(err){
-    showFirebaseStatus('❌ Erreur Firebase : '+err.message,'#e74c3c');
-    showToast('Erreur Firebase','#e74c3c');
-    _fbConnected=false;_fbDb=null;
-  }
-}
-function testFirebaseConnection(){
-  if(!_fbDb){showToast('Configurez Firebase d\'abord','#e74c3c');return;}
-  _fbDb.ref('hm_ping').set({t:Date.now(),by:currentUser?.name||'?'})
-    .then(()=>showToast('✅ Firebase OK — écriture réussie','#27ae60'))
-    .catch(e=>showToast('❌ Erreur : '+e.message,'#e74c3c'));
-}
-function initFirebaseOnStartup(){
-  const cfg=loadFirebaseConfig();
-  if(cfg){setTimeout(()=>initFirebase(cfg),500);}
-}
-
-// ══════════════════════════════════════════════════════════════
-// LIVE ADMIN — SUIVI EN TEMPS RÉEL (Firebase Realtime DB)
-// ══════════════════════════════════════════════════════════════
+let _liveChannel=null;
 let _livePanel=null;
+let _livePollInterval=null;
+let _liveLastSnapshot="";
 
 function broadcastUpdate(){
   const snapshot=buildLiveSnapshot();
-  const payload={snapshot,updatedAt:new Date().toISOString(),byUser:currentUser?.name||'?'};
-  // Firebase (multi-appareils, internet général)
-  if(_fbDb&&_fbConnected){
-    _fbDb.ref('hm_live/snapshot').set(payload).catch(()=>{});
-  }
-  // Fallback localStorage (même navigateur)
-  try{localStorage.setItem('hm_live_update',JSON.stringify(payload));}catch(e){}
+  localStorage.setItem("hm_live_update",JSON.stringify({snapshot,updatedAt:new Date().toISOString(),byUser:currentUser?.name||"?"}));
+  try{if(_liveChannel)_liveChannel.postMessage({type:"update",snapshot,updatedAt:new Date().toISOString(),byUser:currentUser?.name||"?"});}catch(e){}
 }
 
 function buildLiveSnapshot(){
@@ -1900,7 +1858,7 @@ function buildLiveSnapshot(){
     const done=tasks.filter(t=>completions[ck(r.id,t.id,t.freq)]).length;
     const pct=tasks.length?Math.round(done/tasks.length*100):0;
     snap.push({id:r.id,label:r.label,icon:r.icon,color:r.color,done,total:tasks.length,pct,secteur:r.secteur,
-      tasks:tasks.map(t=>({id:t.id,label:t.label,freq:t.freq,note:t.note||'',done:!!completions[ck(r.id,t.id,t.freq)]}))
+      tasks:tasks.map(t=>({id:t.id,label:t.label,freq:t.freq,note:t.note||"",done:!!completions[ck(r.id,t.id,t.freq)]}))
     });
   });
   return snap;
@@ -1911,17 +1869,14 @@ function openLivePanel(){
   if(_livePanel){_livePanel.remove();_livePanel=null;stopLivePolling();return;}
   _livePanel=document.createElement("div");
   _livePanel.id="live-panel";
-  const fbStatus=_fbConnected
-    ?'<span style="color:#27ae60;font-size:10px;">🔥 Firebase</span>'
-    :'<span style="color:#f39c12;font-size:10px;">⚠️ Local uniquement</span>';
   _livePanel.innerHTML=`
     <div id="lp-header">
       <div>
         <div style="font-size:13px;font-weight:900;">📡 Suivi Live — Admin</div>
-        <div id="lp-last" style="font-size:10px;opacity:.7;">En attente de données... ${fbStatus}</div>
+        <div id="lp-last" style="font-size:10px;opacity:.7;">En attente de données...</div>
       </div>
       <div style="display:flex;gap:6px;align-items:center;">
-        <div id="lp-dot" style="width:10px;height:10px;border-radius:50%;background:${_fbConnected?'#27ae60':'#f39c12'};animation:lpPulse 1.5s infinite;"></div>
+        <div id="lp-dot" style="width:10px;height:10px;border-radius:50%;background:#27ae60;animation:lpPulse 1.5s infinite;"></div>
         <button onclick="openLivePanel()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">✕ Fermer</button>
       </div>
     </div>
@@ -1933,37 +1888,23 @@ function openLivePanel(){
 
 function startLivePolling(){
   stopLivePolling();
-  if(_fbDb&&_fbConnected){
-    // Firebase Realtime listener — déclenché dès qu'un chef de rayon coche une tâche
-    _fbLiveRef=_fbDb.ref('hm_live/snapshot');
-    _fbUnsubscribe=_fbLiveRef.on('value',snap=>{
-      const d=snap.val();
-      if(d&&d.snapshot)renderLivePanel(d.snapshot,d.updatedAt,d.byUser);
-    },err=>{
-      // Si Firebase échoue, fallback localStorage
-      startLocalPolling();
-    });
-  } else {
-    // Fallback : polling localStorage + BroadcastChannel
-    startLocalPolling();
-  }
-}
-
-let _livePollInterval=null,_liveChannel=null,_liveLastSnapshot='';
-function startLocalPolling(){
+  // BroadcastChannel pour même machine même navigateur
   try{
-    _liveChannel=new BroadcastChannel('hm_live');
-    _liveChannel.onmessage=e=>{if(e.data?.snapshot)renderLivePanel(e.data.snapshot,e.data.updatedAt,e.data.byUser);};
+    _liveChannel=new BroadcastChannel("hm_live");
+    _liveChannel.onmessage=e=>{if(e.data?.type==="update"&&e.data.snapshot){renderLivePanel(e.data.snapshot,e.data.updatedAt,e.data.byUser);}};
   }catch(ex){_liveChannel=null;}
+  // Fallback polling localStorage toutes les 3s
   _livePollInterval=setInterval(()=>{
     try{
-      const raw=localStorage.getItem('hm_live_update');
+      const raw=localStorage.getItem("hm_live_update");
       if(!raw)return;
-      if(raw===_liveLastSnapshot)return;
-      _liveLastSnapshot=raw;
+      const snap=JSON.stringify(raw);
+      if(snap===_liveLastSnapshot)return;
+      _liveLastSnapshot=snap;
       const d=JSON.parse(raw);
       if(d.snapshot)renderLivePanel(d.snapshot,d.updatedAt,d.byUser);
     }catch(e){}
+    // Si même onglet, refresh direct
     if(isDirecteur()&&_livePanel)renderLivePanel(buildLiveSnapshot());
   },3000);
 }
@@ -1971,7 +1912,6 @@ function startLocalPolling(){
 function stopLivePolling(){
   if(_livePollInterval){clearInterval(_livePollInterval);_livePollInterval=null;}
   if(_liveChannel){_liveChannel.close();_liveChannel=null;}
-  if(_fbLiveRef&&_fbUnsubscribe){try{_fbLiveRef.off('value',_fbUnsubscribe);}catch(e){}}_fbLiveRef=null;_fbUnsubscribe=null;
 }
 
 function renderLivePanel(snap,updatedAt,byUser){
@@ -2021,19 +1961,69 @@ function resetPeriodicData(){
 }
 function setVH(){document.documentElement.style.setProperty('--vh',(window.innerHeight*0.01)+'px');}
 window.addEventListener('resize',setVH);setVH();
-document.addEventListener('touchend',e=>{if((e.target.tagName==='BUTTON'||e.target.closest('button'))&&!e.target.closest('#login-overlay'))e.preventDefault();},{passive:false});
+document.addEventListener('touchend',e=>{if(e.target.tagName==='BUTTON'||e.target.closest('button'))e.preventDefault();},{passive:false});
 window.addEventListener('beforeunload',()=>{saveData();saveCompanyData();});
 
 loadData();
 resetPeriodicData();
 updateHeaderCompany();
-initFirebaseOnStartup();
 initAuth();
+</script>
 
-// ── Service Worker (PWA installable) ──
+<script>
+// === FIREBASE CONFIG - REMPLACE PAR TES VALEURS ===
+const firebaseConfig = {
+  apiKey: "AIzaSyDNdudAyJjS22vRsGMxMVS6P8RtvG8vWLE",
+  authDomain: "pilotage-2115e.firebaseapp.com",
+  databaseURL: "https://pilotage-2115e-default-rtdb.firebaseio.com",
+  projectId: "pilotage-2115e",
+  storageBucket: "pilotage-2115e.firebasestorage.app",
+  messagingSenderId: "952400171478",
+  appId: "1:952400171478:web:53e2942c6c6dc63fb99477"
+};
+// ================================================
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const stateRef = db.ref('hm/state');
+
+// Sync layer
+async function pushState(){
+  const payload = {
+    completions,
+    kpis: typeof kpis !== 'undefined' ? kpis : {},
+    incidents: typeof incidents !== 'undefined' ? incidents : [],
+    notes: typeof notes !== 'undefined' ? notes : {},
+    updatedAt: new Date().toISOString(),
+    byUser: currentUser?.name || '?'
+  };
+  await stateRef.set(payload);
+}
+
+// Override broadcastUpdate
+const _origBroadcast = broadcastUpdate;
+broadcastUpdate = function(){
+  _origBroadcast();
+  pushState();
+};
+
+// Listen realtime
+stateRef.on('value', snap=>{
+  const payload = snap.val();
+  if(!payload) return;
+  if(payload.completions) Object.assign(completions, payload.completions);
+  if(payload.kpis) Object.assign(kpis, payload.kpis);
+  if(payload.incidents) incidents = payload.incidents;
+  if(payload.notes) Object.assign(notes, payload.notes);
+  saveData();
+  renderAll();
+  if(_livePanel) renderLivePanel(buildLiveSnapshot(), payload.updatedAt, payload.byUser);
+});
+
+// Service Worker
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('./service-worker.js'));
 }
 </script>
+
 </body>
 </html>
