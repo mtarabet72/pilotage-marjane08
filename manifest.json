@@ -1,0 +1,21 @@
+{
+  "name": "Pilotage Hypermarch\u00e9 \u2014 Direction",
+  "short_name": "Hypermarch\u00e9",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0a1628",
+  "theme_color": "#0a1628",
+  "icons": [
+    {
+      "src": "./icons/icon-192-marjane.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512-marjane.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "scope": "./"
+}
