@@ -88,10 +88,10 @@ input,select,textarea{font-family:'DM Sans',sans-serif;font-size:14px;}
   position:-webkit-sticky;position:sticky;top:0;z-index:200;
   box-shadow:0 4px 24px rgba(0,0,0,0.35);
 }
-.hdr-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.hdr-logo-img{width:36px;height:36px;border-radius:7px;object-fit:cover;border:2px solid rgba(255,255,255,.2);}
-.hdr-logo-text{font-size:24px;}
-.hdr-title{font-size:14px;font-weight:900;letter-spacing:.5px;flex:1;}
+.hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.hdr-logo-img{width:36px;height:36px;border-radius:7px;object-fit:cover;border:2px solid rgba(255,255,255,.2);flex-shrink:0;}
+.hdr-logo-text{font-size:22px;flex-shrink:0;}
+.hdr-title{font-size:13px;font-weight:900;letter-spacing:.3px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .hdr-sub{font-size:10px;opacity:.5;margin-top:1px;}
 .hdr-user-badge{
   display:flex;align-items:center;gap:6px;padding:5px 10px;
@@ -365,11 +365,8 @@ input,select,textarea{font-family:'DM Sans',sans-serif;font-size:14px;}
 @media print{body *{visibility:hidden!important;}#print-area,#print-area *{visibility:visible!important;}#print-area{position:fixed;top:0;left:0;width:100%;}}
 </style>
 
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#0a1628">
-<link rel="apple-touch-icon" href="./icons/icon-192-marjane.png">
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+
 
 </head>
 <body>
@@ -1612,11 +1609,8 @@ function buildReportHTML(forPrint=false){
   const logoHtml=cd.logo?`<img src="${cd.logo}" style="height:50px;border-radius:6px;" alt="Logo">`:`<span style="font-size:28px;">🏬</span>`;
   const dirBlock=cd.directorName?`<div><span style="font-size:10px;opacity:.6;">Directeur</span><br><span style="font-size:13px;font-weight:700;">${cd.directorName}${cd.directorTitle?' — '+cd.directorTitle:''}</span></div>`:'';
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Rapport — ${periodLabel}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#1a1f2e;padding:${forPrint?"0":"20px"};}@page{margin:15mm 12mm;size:A4;}@media print{body{padding:0;}}</style>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#0a1628">
-<link rel="apple-touch-icon" href="./icons/icon-192-marjane.png">
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+
 
 </head><body>
   <div style="background:linear-gradient(135deg,#0a1628,#0d3060);color:#fff;padding:18px 22px;border-radius:${forPrint?"0":"8px 8px 0 0"};">
@@ -1635,61 +1629,6 @@ function buildReportHTML(forPrint=false){
   <div style="padding:0 2px;">${body||`<div style="text-align:center;padding:40px;color:#aaa;">Aucune donnée.</div>`}</div>
   <div style="margin-top:30px;padding:12px 0;border-top:1px solid #e2e6ed;text-align:center;font-size:10px;color:#bbb;">${cd.nom||'Outil de pilotage'} · ${now}</div>
   
-<script>
-// === FIREBASE CONFIG - REMPLACE PAR TES VALEURS ===
-const firebaseConfig = {
-  apiKey: "AIzaSyDNdudAyJjS22vRsGMxMVS6P8RtvG8vWLE",
-  authDomain: "pilotage-2115e.firebaseapp.com",
-  databaseURL: "https://pilotage-2115e-default-rtdb.firebaseio.com",
-  projectId: "pilotage-2115e",
-  storageBucket: "pilotage-2115e.firebasestorage.app",
-  messagingSenderId: "952400171478",
-  appId: "1:952400171478:web:53e2942c6c6dc63fb99477"
-};
-// ================================================
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const stateRef = db.ref('hm/state');
-
-// Sync layer
-async function pushState(){
-  const payload = {
-    completions,
-    kpis: typeof kpis !== 'undefined' ? kpis : {},
-    incidents: typeof incidents !== 'undefined' ? incidents : [],
-    notes: typeof notes !== 'undefined' ? notes : {},
-    updatedAt: new Date().toISOString(),
-    byUser: currentUser?.name || '?'
-  };
-  await stateRef.set(payload);
-}
-
-// Override broadcastUpdate
-const _origBroadcast = broadcastUpdate;
-broadcastUpdate = function(){
-  _origBroadcast();
-  pushState();
-};
-
-// Listen realtime
-stateRef.on('value', snap=>{
-  const payload = snap.val();
-  if(!payload) return;
-  if(payload.completions) Object.assign(completions, payload.completions);
-  if(payload.kpis) Object.assign(kpis, payload.kpis);
-  if(payload.incidents) incidents = payload.incidents;
-  if(payload.notes) Object.assign(notes, payload.notes);
-  saveData();
-  renderAll();
-  if(_livePanel) renderLivePanel(buildLiveSnapshot(), payload.updatedAt, payload.byUser);
-});
-
-// Service Worker
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=> navigator.serviceWorker.register('./service-worker.js'));
-}
-</script>
-
 </body></html>`;
 }
 function showPreview(){
@@ -1970,59 +1909,74 @@ updateHeaderCompany();
 initAuth();
 </script>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-// === FIREBASE CONFIG - REMPLACE PAR TES VALEURS ===
-const firebaseConfig = {
-  apiKey: "AIzaSyDNdudAyJjS22vRsGMxMVS6P8RtvG8vWLE",
-  authDomain: "pilotage-2115e.firebaseapp.com",
-  databaseURL: "https://pilotage-2115e-default-rtdb.firebaseio.com",
-  projectId: "pilotage-2115e",
-  storageBucket: "pilotage-2115e.firebasestorage.app",
-  messagingSenderId: "952400171478",
-  appId: "1:952400171478:web:53e2942c6c6dc63fb99477"
-};
-// ================================================
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const stateRef = db.ref('hm/state');
-
-// Sync layer
-async function pushState(){
-  const payload = {
-    completions,
-    kpis: typeof kpis !== 'undefined' ? kpis : {},
-    incidents: typeof incidents !== 'undefined' ? incidents : [],
-    notes: typeof notes !== 'undefined' ? notes : {},
-    updatedAt: new Date().toISOString(),
-    byUser: currentUser?.name || '?'
+// ══════════════════════════════════════════════════════════════
+// FIREBASE REALTIME — SUIVI LIVE MULTI-APPAREILS
+// ══════════════════════════════════════════════════════════════
+(function(){
+  const firebaseConfig = {
+    apiKey: "AIzaSyDNdudAyJjS22vRsGMxMVS6P8RtvG8vWLE",
+    authDomain: "pilotage-2115e.firebaseapp.com",
+    databaseURL: "https://pilotage-2115e-default-rtdb.firebaseio.com",
+    projectId: "pilotage-2115e",
+    storageBucket: "pilotage-2115e.firebasestorage.app",
+    messagingSenderId: "952400171478",
+    appId: "1:952400171478:web:53e2942c6c6dc63fb99477"
   };
-  await stateRef.set(payload);
-}
 
-// Override broadcastUpdate
-const _origBroadcast = broadcastUpdate;
-broadcastUpdate = function(){
-  _origBroadcast();
-  pushState();
-};
+  // Guard : n'initialiser qu'une fois
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const stateRef = db.ref('hm/state');
 
-// Listen realtime
-stateRef.on('value', snap=>{
-  const payload = snap.val();
-  if(!payload) return;
-  if(payload.completions) Object.assign(completions, payload.completions);
-  if(payload.kpis) Object.assign(kpis, payload.kpis);
-  if(payload.incidents) incidents = payload.incidents;
-  if(payload.notes) Object.assign(notes, payload.notes);
-  saveData();
-  renderAll();
-  if(_livePanel) renderLivePanel(buildLiveSnapshot(), payload.updatedAt, payload.byUser);
-});
+  // ── Push vers Firebase à chaque broadcastUpdate ──────────────
+  const _origBroadcast = typeof broadcastUpdate === 'function' ? broadcastUpdate : function(){};
+  broadcastUpdate = function(){
+    _origBroadcast();
+    if(!currentUser) return;
+    stateRef.set({
+      completions,
+      customTasks,
+      taskOverrides,
+      updatedAt: new Date().toISOString(),
+      byUser: currentUser?.name || '?'
+    }).catch(e => console.warn('Firebase push error:', e));
+  };
 
-// Service Worker
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=> navigator.serviceWorker.register('./service-worker.js'));
-}
+  // ── Écoute temps réel ────────────────────────────────────────
+  let _ignoreNext = false; // évite boucle locale→firebase→locale
+  stateRef.on('value', snap => {
+    const payload = snap.val();
+    if (!payload || !payload.updatedAt) return;
+    // Ne pas appliquer notre propre push
+    if (payload.byUser === (currentUser?.name || '?') && _ignoreNext) { _ignoreNext = false; return; }
+    if (payload.completions)  Object.assign(completions,   payload.completions);
+    if (payload.customTasks)  Object.assign(customTasks,   payload.customTasks);
+    if (payload.taskOverrides) Object.assign(taskOverrides, payload.taskOverrides);
+    saveData();
+    // Refresh UI si connecté
+    if(currentUser){
+      renderDashboard();
+      if(typeof renderSidebar === 'function') renderSidebar();
+      if(typeof renderProgressBar === 'function') renderProgressBar();
+      if(typeof renderTasks === 'function' && document.getElementById('view-tasks')?.classList.contains('active')) renderTasks();
+    }
+    if(typeof _livePanel !== 'undefined' && _livePanel && typeof renderLivePanel === 'function'){
+      renderLivePanel(buildLiveSnapshot(), payload.updatedAt, payload.byUser);
+    }
+  });
+
+  // ── Service Worker (PWA installable) ────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(r => console.log('SW registered', r.scope))
+        .catch(e => console.warn('SW error', e));
+    });
+  }
+})();
 </script>
 
 </body>
