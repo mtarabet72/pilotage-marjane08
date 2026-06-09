@@ -396,6 +396,10 @@ input,select,textarea{font-family:'DM Sans',sans-serif;font-size:14px;}
     <button class="login-btn" id="btn-login" type="button">🔐 Connexion</button>
     <div class="login-error" id="login-error"></div>
     <div class="login-hint" id="login-hint">Connexion initiale : admin / 1234</div>
+    <div style="text-align:center;margin-top:12px;"><button type="button" id="btn-reset-pw" style="background:none;border:1px solid #e74c3c;color:#e74c3c;padding:6px 14px;border-radius:6px;font-size:11px;cursor:pointer;">🔄 Réinitialiser le mot de passe</button></div>
+    <div style="text-align:center;margin-top:12px;">
+      <button type="button" onclick="if(confirm('Réinitialiser toutes les données de connexion ? Vous reviendrez à admin/1234.')){localStorage.removeItem('hm_users');sessionStorage.clear();location.reload();}" style="background:none;border:1px solid #e74c3c;color:#e74c3c;padding:6px 14px;border-radius:6px;font-size:11px;cursor:pointer;">🔄 Réinitialiser le mot de passe</button>
+    </div>
   </div>
 </div>
 
@@ -2085,6 +2089,16 @@ function doLogin(){
     }
     if(pwInput){ pwInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); doLogin(); } }); }
     if(unInput){ unInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('login-password').focus(); } }); }
+    var btnReset = document.getElementById('btn-reset-pw');
+    if(btnReset){
+      btnReset.addEventListener('click', function(){
+        if(confirm('Réinitialiser toutes les données de connexion ?\nVous reviendrez à admin / 1234.')){
+          localStorage.removeItem('hm_users');
+          sessionStorage.clear();
+          location.reload();
+        }
+      });
+    }
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', attachLogin); }
   else { attachLogin(); }
@@ -2103,4 +2117,3 @@ if('serviceWorker' in navigator){
 </script>
 </body>
 </html>
-
