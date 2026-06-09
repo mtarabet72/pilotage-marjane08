@@ -393,10 +393,10 @@ input,select,textarea{font-family:'DM Sans',sans-serif;font-size:14px;}
         <button class="pw-eye" id="btn-pw-eye" type="button">👁️</button>
       </div>
     </div>
-    <button class="login-btn" id="btn-login" type="button">🔐 Connexion</button>
+    <button class="login-btn" id="btn-login" type="button" onclick="doLogin()">🔐 Connexion</button>
     <div class="login-error" id="login-error"></div>
     <div class="login-hint" id="login-hint">Connexion initiale : admin / 1234</div>
-    <div style="text-align:center;margin-top:12px;"><button type="button" id="btn-reset-pw" style="background:none;border:1px solid #e74c3c;color:#e74c3c;padding:6px 14px;border-radius:6px;font-size:11px;cursor:pointer;">🔄 Réinitialiser le mot de passe</button></div>
+    <div style="text-align:center;margin-top:12px;"><button type="button" id="btn-reset-pw" onclick="resetLoginData()" style="background:none;border:1px solid #e74c3c;color:#e74c3c;padding:6px 14px;border-radius:6px;font-size:11px;cursor:pointer;">🔄 Réinitialiser le mot de passe</button></div>
   </div>
 </div>
 
@@ -880,10 +880,20 @@ function loadData(){
   try{companyData=Object.assign({nom:"",logo:null,address:"",phone:"",email:"",web:"",directorName:"",directorTitle:"Directeur",directorPhone:"",directorEmail:"",orgName:"",orgRef:"",orgAddress:"",orgContact:"",orgPerson:""},JSON.parse(localStorage.getItem("hm_company")||"{}"));}catch(e){}
   try{usersData=JSON.parse(localStorage.getItem("hm_users")||"[]");}catch(e){usersData=[];}
   // Toujours garantir le compte admin même si localStorage est bloqué
-  if(!usersData.find(u=>u.username==='admin')){
+  const existingAdmin = usersData.find(u=>u.username==='admin');
+  if(!existingAdmin){
     const adminDef={id:'u_admin',name:'Directeur',username:'admin',passwordHash:hashStr('1234'),systemRole:'directeur',ownRoleId:null,evaluableRoleIds:ROLES.map(r=>r.id),active:true,createdAt:new Date().toISOString()};
     if(usersData.length===0){usersData=[adminDef];}else{usersData.unshift(adminDef);}
     try{saveUsers();}catch(e){}
+  } else {
+    // Migration : si le hash stocké ne correspond pas au hash actuel de '1234', c'est un ancien sel — on recrée le compte admin proprement
+    if(existingAdmin.passwordHash !== hashStr('1234') && existingAdmin._pwChanged !== true){
+      existingAdmin.passwordHash = hashStr('1234');
+      existingAdmin.active = true;
+      existingAdmin.systemRole = existingAdmin.systemRole || 'directeur';
+      existingAdmin.evaluableRoleIds = existingAdmin.evaluableRoleIds || ROLES.map(r=>r.id);
+      try{saveUsers();}catch(e){}
+    }
   }
 }
 function saveData(){
@@ -1465,7 +1475,7 @@ function resetUserPw(userId){
     const p1=document.getElementById('rpw-1').value,p2=document.getElementById('rpw-2').value;
     if(!p1){showToast('Mot de passe requis','#e74c3c');return;}
     if(p1!==p2){showToast('Les mots de passe ne correspondent pas','#e74c3c');return;}
-    u.passwordHash=hashStr(p1);saveUsers();closeModal();showToast('✅ Mot de passe modifié','#27ae60');
+    u.passwordHash=hashStr(p1);u._pwChanged=true;saveUsers();closeModal();showToast('✅ Mot de passe modifié','#27ae60');
   };
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('rpw-1').focus(),100);
@@ -1483,7 +1493,7 @@ function openChangePwModal(){
     if(hashStr(cur)!==currentUser.passwordHash){showToast('Mot de passe actuel incorrect','#e74c3c');return;}
     if(!p1){showToast('Nouveau mot de passe requis','#e74c3c');return;}
     if(p1!==p2){showToast('Les mots de passe ne correspondent pas','#e74c3c');return;}
-    const u=usersData.find(x=>x.id===currentUser.id);if(u){u.passwordHash=hashStr(p1);currentUser.passwordHash=hashStr(p1);}
+    const u=usersData.find(x=>x.id===currentUser.id);if(u){u.passwordHash=hashStr(p1);u._pwChanged=true;currentUser.passwordHash=hashStr(p1);}
     saveUsers();closeModal();showToast('✅ Mot de passe changé','#27ae60');
   };
   document.getElementById('modal-overlay').classList.add('open');
@@ -2014,7 +2024,7 @@ window.addEventListener('resize',setVH);setVH();
 // touchend supprimé — causait des blocages sur mobile
 window.addEventListener('beforeunload',()=>{saveData();saveCompanyData();});
 
-// ── Login event listeners : définis après doLogin() ci-dessous ──
+// ── Login event listeners : voir setupLoginListeners() après doLogin ──
 
 // ── doLogin reécrit robuste ──
 function doLogin(){
@@ -2042,18 +2052,21 @@ function doLogin(){
   onLoginSuccess();
 }
 
+// ── resetLoginData global ──
+function resetLoginData(){
+  if(confirm('Réinitialiser toutes les données de connexion ?\nVous reviendrez à admin / 1234.')){
+    localStorage.removeItem('hm_users');
+    sessionStorage.clear();
+    location.reload();
+  }
+}
+
 // ── Login event listeners propres ──
 (function setupLoginListeners(){
   function attachLogin(){
-    var btnLogin = document.getElementById('btn-login');
     var btnEye   = document.getElementById('btn-pw-eye');
     var pwInput  = document.getElementById('login-password');
     var unInput  = document.getElementById('login-username');
-    if(btnLogin){
-      ['click','touchend'].forEach(function(ev){
-        btnLogin.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); doLogin(); });
-      });
-    }
     if(btnEye){
       ['click','touchend'].forEach(function(ev){
         btnEye.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); togglePwVis('login-password', btnEye); });
@@ -2061,16 +2074,6 @@ function doLogin(){
     }
     if(pwInput){ pwInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); doLogin(); } }); }
     if(unInput){ unInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('login-password').focus(); } }); }
-    var btnReset = document.getElementById('btn-reset-pw');
-    if(btnReset){
-      btnReset.addEventListener('click', function(){
-        if(confirm('Réinitialiser toutes les données de connexion ?\nVous reviendrez à admin / 1234.')){
-          localStorage.removeItem('hm_users');
-          sessionStorage.clear();
-          location.reload();
-        }
-      });
-    }
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', attachLogin); }
   else { attachLogin(); }
